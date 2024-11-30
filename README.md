@@ -1,4 +1,4 @@
-# tradingview_pine
+# Tradingview_pine
 tradingview pine strategy weekly
 
 
