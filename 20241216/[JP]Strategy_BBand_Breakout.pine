@@ -1,0 +1,42 @@
+//@version=5
+strategy("BBand Breakout Strategy", overlay=true)
+
+// ボリンジャーバンドのパラメータを設定
+length = input.int(20, title="BBand 長さ")
+mult = input.float(2.0, title="BBand 倍数")
+
+// バックテストの期間を設定
+start_date = timestamp(2021, 12, 15, 0, 0)
+end_date = timestamp(2024, 12, 15, 0, 0)
+if (time < start_date or time > end_date)
+    strategy.close_all()
+
+// ボリンジャーバンドを計算
+basis = ta.sma(close, length)
+upper = basis + mult * ta.stdev(close, length)
+lower = basis - mult * ta.stdev(close, length)
+
+// ボリンジャーバンドをプロット
+plot(basis, color=color.blue, title="BBand 中央線")
+plot(upper, color=color.green, title="BBand 上限")
+plot(lower, color=color.red, title="BBand 下限")
+
+// エントリーとエグジットの条件を設定
+below_lower_prev = ta.valuewhen(close[1] < lower[1], 1, 0)
+below_lower_now = close < lower
+above_upper_prev = ta.valuewhen(close[1] > upper[1], 1, 0)
+above_upper_now = close > upper
+
+// 買い条件: 前の終値が下限を下回り、現在の終値も下限を下回る場合
+buy_condition = below_lower_prev and below_lower_now
+if (buy_condition)
+    strategy.entry("Buy", strategy.long)
+
+// 売り条件: 前の終値が上限を上回り、現在の終値も上限を上回る場合
+sell_condition = above_upper_prev and above_upper_now
+if (sell_condition)
+    strategy.entry("Sell", strategy.short)
+
+// チャートに買いと売りのシグナルをプロット
+plotshape(buy_condition, style=shape.labelup, location=location.belowbar, color=color.green, size=size.small, title="買いシグナル")
+plotshape(sell_condition, style=shape.labeldown, location=location.abovebar, color=color.red, size=size.small, title="売りシグナル")
