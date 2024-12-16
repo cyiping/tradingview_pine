@@ -1,0 +1,42 @@
+//@version=5
+strategy("BBand Breakout Strategy", overlay=true)
+
+// 設定 Bollinger Bands 的參數
+length = input.int(20, title="BBand 長度")
+mult = input.float(2.0, title="BBand 倍數")
+
+// 設定回測的日期範圍
+start_date = timestamp(2021, 12, 15, 0, 0)
+end_date = timestamp(2024, 12, 15, 0, 0)
+if (time < start_date or time > end_date)
+    strategy.close_all()
+
+// 計算 Bollinger Bands
+basis = ta.sma(close, length)
+upper = basis + mult * ta.stdev(close, length)
+lower = basis - mult * ta.stdev(close, length)
+
+// 繪製 Bollinger Bands
+plot(basis, color=color.blue, title="BBand 中軌")
+plot(upper, color=color.green, title="BBand 上軌")
+plot(lower, color=color.red, title="BBand 下軌")
+
+// 設定進出場條件
+below_lower_prev = ta.valuewhen(close[1] < lower[1], 1, 0)
+below_lower_now = close < lower
+above_upper_prev = ta.valuewhen(close[1] > upper[1], 1, 0)
+above_upper_now = close > upper
+
+// 買入條件：前一根 K 線的收盤價低於下軌，且當前收盤價也低於下軌
+buy_condition = below_lower_prev and below_lower_now
+if (buy_condition)
+    strategy.entry("Buy", strategy.long)
+
+// 賣出條件：前一根 K 線的收盤價高於上軌，且當前收盤價也高於上軌
+sell_condition = above_upper_prev and above_upper_now
+if (sell_condition)
+    strategy.entry("Sell", strategy.short)
+
+// 在圖表上繪製買入與賣出信號
+plotshape(buy_condition, style=shape.labelup, location=location.belowbar, color=color.green, size=size.small, title="買入信號")
+plotshape(sell_condition, style=shape.labeldown, location=location.abovebar, color=color.red, size=size.small, title="賣出信號")
