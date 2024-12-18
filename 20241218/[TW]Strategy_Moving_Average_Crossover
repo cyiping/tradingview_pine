@@ -1,30 +1,30 @@
 //@version=5
 strategy("均線交叉策略", overlay=true)
 
-// 輸入參數：設定月線與季線的週期
-monthLength = input.int(20, title="月線週期")
-quarterLength = input.int(60, title="季線週期")
+// 輸入參數
+monthly_length = input.int(20, title="月線週期", minval=1)
+quarterly_length = input.int(60, title="季線週期", minval=1)
 
-// 計算月線 (短期均線) 和季線 (長期均線)
-maMonth = ta.sma(close, monthLength)
-maQuarter = ta.sma(close, quarterLength)
+// 計算指標
+monthly_ma = ta.sma(close, monthly_length)
+quarterly_ma = ta.sma(close, quarterly_length)
 
-// 畫出均線
-plot(maMonth, color=color.blue, title="月線")
-plot(maQuarter, color=color.red, title="季線")
+// 信號判斷
+long_signal = ta.crossover(monthly_ma, quarterly_ma)
+short_signal = ta.crossunder(monthly_ma, quarterly_ma)
 
-// 買入和賣出條件
-buyCondition = ta.crossover(maMonth, maQuarter)  // 月線向上穿越季線
-sellCondition = ta.crossunder(maMonth, maQuarter)  // 月線向下穿越季線
-
-// 觸發買賣信號
-if buyCondition
-    strategy.entry("Buy", strategy.long)
-if sellCondition
+// 交易條件
+if (long_signal)
+    strategy.entry("Buy", strategy.long, 1)
+if (short_signal)
     strategy.close("Buy")
 
-// 設定測試時間範圍 (最近兩年)
-startDate = timestamp(year, month, dayofmonth) - (365 * 2 * 86400000)
-endDate = timestamp(year, month, dayofmonth)
-if (time < startDate) or (time > endDate)
-    strategy.cancel_all()
+// 測試時間範圍: 最近兩年
+start_date = timestamp("2022-01-01 00:00")
+end_date = timestamp("2024-12-18 23:59")
+if (time < start_date or time > end_date)
+    strategy.close_all()
+
+// 視覺化要求
+plot(monthly_ma, color=color.blue, title="月線")
+plot(quarterly_ma, color=color.red, title="季線")
