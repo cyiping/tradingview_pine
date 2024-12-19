@@ -1,0 +1,30 @@
+//@version=5
+strategy("Moving Average Crossover Strategy", overlay=true)
+
+// Input Parameters
+monthly_length = input.int(20, title="Monthly MA Period", minval=1)
+quarterly_length = input.int(60, title="Quarterly MA Period", minval=1)
+
+// Indicator Calculations
+monthly_ma = ta.sma(close, monthly_length)
+quarterly_ma = ta.sma(close, quarterly_length)
+
+// Signal Detection
+long_signal = ta.crossover(monthly_ma, quarterly_ma)
+short_signal = ta.crossunder(monthly_ma, quarterly_ma)
+
+// Trading Conditions
+if (long_signal)
+    strategy.entry("Buy", strategy.long, 1)
+if (short_signal)
+    strategy.close("Buy")
+
+// Test Time Range: Last two years
+start_date = timestamp("2022-01-01 00:00")
+end_date = timestamp("2024-12-18 23:59")
+if (time < start_date or time > end_date)
+    strategy.close_all()
+
+// Visualization
+plot(monthly_ma, color=color.blue, title="Monthly MA")
+plot(quarterly_ma, color=color.red, title="Quarterly MA")
